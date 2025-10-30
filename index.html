@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLACK FACTORY Festival Schedule</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+@media (max-width: 768px) {
+    body {
+        background-attachment: fixed !important;
+        background-size: cover !important;
+        background-position: center top !important;
+        overflow-x: hidden;
+        background-image: none !important;
+    }
+
+    .all-view {
+        background-attachment: fixed !important;
+        background-size: cover !important;
+        background-position: center top !important;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image: url('https://static-image-2.s3.us-west-1.amazonaws.com/blog_images/pic4.png');
+        background-size: cover;
+        background-position: center top;
+        background-repeat: no-repeat;
+        z-index: -1;
+        will-change: transform;
+    }
+}
+
+body.dark-mode .dark-mode-text {
+    color: #6b7280 !important;
+}
+
+@font-face {
+    font-family: 'LCDNova';
+    src: url('./a_LCDNova.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.lcd-font {
+    font-family: 'LCDNova', monospace !important;
+    letter-spacing: 0.05em;
+}
+
+.live-box-bg {
+    background: linear-gradient(to right, rgba(252, 0, 255, 0.2), rgba(0, 255, 255, 0.2));  /* Magenta to Cyan */
+    border-color: #fc00ff;  /* Magenta border */
+
+    position: relative;
+    overflow: hidden;
+}
+
+.live-box-bg::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.15) 0px,
+        rgba(255, 255, 255, 0.15) 50px,
+        transparent 50px,
+        transparent 120px
+    );
+    animation: slideRightLeft 8s ease-in-out infinite;
+    z-index: 1;
+}
+
+.live-box-bg > * {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes slideRightLeft {
+    0%, 100% {
+        transform: translateX(-30px);
+    }
+    50% {
+        transform: translateX(30px);
+    }
+}
+
+.artist-box-blackbox {
+    background-color: rgba(252, 0, 255, 0.2) !important;  /* Magenta */
+    backdrop-filter: blur(40px);
+}
+
+.artist-box-angar {
+    background-color: rgba(0, 255, 255, 0.25) !important;  /* Cyan */
+    backdrop-filter: blur(40px);
+}
+
+.artist-box-past {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(40px);
+    border-left-color: #6b7280 !important;
+}
+
+.artist-modal {
+    backdrop-filter: blur(21px) !important;
+    background-color: rgba(17, 24, 39, 0.6) !important;
+}
+
+body {
+    margin: 0;
+    font-family: 'LCDNova', monospace, system-ui, -apple-system, sans-serif;
+    font-weight: 800;
+    background-image: url('https://static-image-2.s3.us-west-1.amazonaws.com/blog_images/pic4.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: -2;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+body.dark-mode::after {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    body::after {
+        position: fixed;
+        z-index: -1;
+    }
+
+    body.dark-mode::after {
+        opacity: 1;
+    }
+
+    body::before {
+        z-index: -2;
+    }
+}
+
+.all-view {
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+}
+
+.dark-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dark-mode-overlay.active {
+    opacity: 1;
+}
+
+body.dark-mode .text-gray-800 {
+    color: black !important;
+}
+
+body.dark-mode .bg-gray-800 {
+    background-color: black !important;
+}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const FestivalSchedule = () => {
+          const [currentTime, setCurrentTime] = useState(new Date());
+          const [selectedVenue, setSelectedVenue] = useState('ALL');
+          const [selectedDay, setSelectedDay] = useState('01.11');
+          const [selectedArtist, setSelectedArtist] = useState(null);
+          const [selectedSlot, setSelectedSlot] = useState(null);
+          const [showPastPerformances, setShowPastPerformances] = useState(true);
+          const [isDarkMode, setIsDarkMode] = useState(true);
+
+          // useEffect(() => {
+          //     document.body.classList.add('dark-mode');
+          // }, []);
+
+          useEffect(() => {
+              setSelectedSlot(null);
+          }, [selectedDay]);
+
+          useEffect(() => {
+            const timer = setInterval(() => {
+              setCurrentTime(new Date());
+            }, 60000);
+            return () => clearInterval(timer);
+          }, []);
+
+         const festivalData = {
+           '01.11': [
+               { time: '14:00', venue: 'ANGAR', artist: 'Roman K', type: 'dj', description: 'Кримський диджей, резидент Closer і засновник Closer Connections Роман — автор проєкту «Unexplored Abyss» з hybrid-live сетами. Працює над власною музикою, досліджуючи зв`язок між теперішнім і майбутнім.'},
+               { time: '14:00', venue: 'BLACK BOX', artist: 'Serge Jazzmate', type: 'dj', description: 'Резидент вечірок LOW (співзасновник) і клубу ∄, український діджей з понад 18-річним досвідом на електронній сцені. '},
+               { time: '16:00', venue: 'ANGAR', artist: 'The Against', type: 'live', description: 'київський live-дует The Against — експериментують з ebm, industrial, вокалом та noise протягом 5 років, зараз фокусуючись на техно. Випустили 3 EP, останній «Mental Noise» на берлінському лейблі XIMG.'},
+               { time: '16:30', venue: 'BLACK BOX', artist: 'Bedroom Talks', type: 'live', description: 'Рівненський продюсер Євген Ковальчук — автор coldwave-проєкту Bedroom Talks з релізами на Holy Hour Records та Oráculo Records. Від дебютної платівки “Machines Know No Love” до повноформатного альбому “Call Me Malespero” — презентує новий лайв-сет на фестивалі.'},
+               { time: '17:00', venue: 'ANGAR', artist: 'Motoblok', type: 'live', description: 'Тернопільський продюсер, диджей і засновник фестивалю «Гамселить» Ярослав — творець лейблу «Pincet», що видав дебютний реліз Kurs Valüt. Його звучання охоплює готичний диджеїнг, сай-транс, пост-індастріал та ЕВМ.'},
+               { time: '17:30', venue: 'BLACK BOX', artist: 'Primal Baby', type: 'live', description: '*'},
+               { time: '18:00', venue: 'ANGAR', artist: 'Kichi Kazuko', type: 'dj', description: 'Представниця андеграундної електронної сцени Києва, засновниця промо-платформи Dots та лейблу Kazuko Music. Спеціалізується на модульному синтезі, створюючи гіпнотичне техно-звучання з кислотними та трансовими елементами.'},
+               { time: '18:30', venue: 'BLACK BOX', artist: 'Ship Her Son', type: 'live', description: 'Львівський продюсер і дизайнер Антон Шиферсон — засновник проєкту, що поєднує постіндастріал, ЕВМ, дарквейв і ньювейв. Автор жанру "dnipropop" з колабораціями разом з 1914, "Паліндромом" і "вагоновожатими".'},
+               { time: '19:30', venue: 'ANGAR', artist: 'Vril', type: 'live', description: '* Представник dub techno та мінімалістичного техно з релізами на лейблі Delsin, включаючи альбом Portal. '},
+               { time: '19:30', venue: 'BLACK BOX', artist: 'Lvcerate', type: 'live', description: 'засновник проєкту «Cultivating Discipline» Валера Лацерат — один з провідних артистів українського темно-прогресивного авангарду з релізами на «X-IMG», «Khoinix», «SOIL» і «система». Представить свій перший лайв-сет на фестивалі.'},
+               { time: '20:30', venue: 'ANGAR', artist: 'Recid', type: 'dj', description: 'Резидент клубу ∄ з орієнтацією на детройтське техно-звучання. Випускає музику на лейблах Arts, Coincidence, Corridor Audio та Nicz, є частиною сучасної української техно-сцени.​​​​​​​​​​​​​​​​'},
+               { time: '20:30', venue: 'BLACK BOX', artist: 'Kris Baha (AU)', type: 'live', description: '* Австралійський диджей і продюсер, засновник лейблу Camisole з релізами на Correspondant та колабораціями з dane//close, Eva (101) aka Boys Noize. Його звучання поєднує ЕВМ, індастріал та електронний авангард.'},
+               { time: '21:30', venue: 'BLACK BOX', artist: 'Hungry Boys', type: 'live', description: 'Київський електронний постпанк-дует з треками у компіляціях «Next Wave Acid Punx DEUX» від Curses (Eskimo Recordings) та «РУХ» від лейблу «Worn Pop».'},
+            ],
+            '02.11': [
+                { time: '14:00', venue: 'ANGAR', artist: 'Katja Stieber & Gothivka', type: 'dj', description: ''},
+                { time: '14:00', venue: 'BLACK BOX', artist: 'Shults.Sashaa', type: 'dj', description: 'Резидент Closer і співвласник рекорд-стору «Octan» — диджей, що спеціалізується на різножанрових сетах з техно, електро та брейксами. Відомий творчим підходом до звукового досвіду.'},
+                { time: '16:30', venue: 'ANGAR', artist: 'Rare DM (US)', type: 'live', description: '* Бруклінська продюсерка Ерін Хоагг, колишня студентка Fashion Institute of Technology, донька барабанщика. Змішує блогхаус, дарквейв, сінті-поп і електроклеш, спираючись на рідкісність як концепт. '},
+                { time: '16:30', venue: 'BLACK BOX', artist: 'Raavel', type: 'dj', description: 'Київський диджей і продюсер Валерій Raavel — автор сольної платівки “Insect Replicant” на лейблі DJ MELL G. Його трек “Wakalaka” увійшов до компіляції Хелени Хауфф для культового клубу Fabric, поєднуючи гетто-електро та хіп-хоп.'},
+                { time: '17:30', venue: 'ANGAR', artist: 'Mariia & Magdalyna & Bunht', type: 'live', description: 'ексклюзивна прем`єра: електронний лайв-перформанс "Earth is a beautiful place" від проєкту Mariia&Magdalyna (Маруся та Надія) і київського продюсера Bunht (Ярослав). Bunht відомий роботою над проєктами «Тонка», «ЩукаРиба», лейблом «Minor Cakes» та альбомом «We Keep On Moving». '},
+                { time: '18:30', venue: 'ANGAR', artist: 'Kurs Valüt', type: 'live', description: 'Дніпровський дует Kurs Valüt — Євген Гордєєв і Євген Касьян, співзасновники лейблу «Dnipropop». Їхнє звучання поєднує дарквейв, ньювейв та ЕВМ з філософією авторської диктатури.'},
+                { time: '18:30', venue: 'BLACK BOX', artist: 'Jensen Interceptor', type: 'live', description: '*'},
+                { time: '19:30', venue: 'ANGAR', artist: 'Bèllis', type: 'dj', description: 'Співорганізаторка серії вечірок «Hybrid Moment» та кураторка шоу «Inner Voyage» на 20ft радіо. Її сети поєднують психоделічний даунтемпо, нуарне диско та нью-біт з нотами авангардної електроніки.'},
+                { time: '19:30', venue: 'BLACK BOX', artist: 'Umwelt (FR)', type: 'live', description: '* Ліонський діджей і продюсер з рейв і техно-сцени 90-х — засновник лейблів Rave Or Die та NewFlesh Records. Його темне кінематографічне звучання поєднує класику з сучасністю'},
+                { time: '20:30', venue: 'BLACK BOX', artist: 'Alex Savage', type: 'dj', description: 'Резидент Closer і співзасновник лейблу «Progressive Future», київський діджей і продюсер, що спеціалізується на темному електро, динамічному брейкбіті та глибокому дабстепі.'},
+                { time: '21:00', venue: 'ANGAR', artist: ' Parrish Smith (NL)', type: 'live', description: '* Нідерландський артист Parrish Smith — підписант Dekmantel і засновник вечірки "Burst City" з сурінамським корінням. Його звучання змішує рок, техно та індастріал під слоганом "No Elitism, No Prejudices, No Genres, No Codes".'},
+            ]
+          };
+
+          const venues = ['ALL', 'BLACK BOX', 'ANGAR'];
+
+          const allEventsForDay = festivalData[selectedDay] || [];
+
+const getTypeIcon = (type, venue) => {
+  const iconColor = venue === 'BLACK BOX' ? '#fc00ff' : '#00ffff';
+  const iconStyle = "w-4 h-4";
+
+  switch (type) {
+    case 'live':
+      return React.createElement('svg', {
+        className: iconStyle,
+        fill: 'currentColor',
+        viewBox: '0 0 24 24',
+        style: { color: iconColor }
+      }, React.createElement('path', { d: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z' }));
+
+    case 'dj':
+      return React.createElement('svg', {
+        className: iconStyle,
+        fill: 'currentColor',
+        viewBox: '0 0 24 24',
+        style: { color: iconColor }
+      }, React.createElement('path', { d: 'M16 4c4.42 0 8 3.58 8 8s-3.58 8-8 8-8-3.58-8-8 3.58-8 8-8m0-2C9.37 2 4 7.37 4 14s5.37 12 12 12 12-5.37 12-12S22.63 2 16 2z' }));
+
+    default:
+      return null;
+  }
+};
+
+          const getVenueColor = (venue) => {
+            switch (venue) {
+                case 'BLACK BOX': return 'border-l-[#fc00ff]';  /* Magenta */
+                case 'ANGAR': return 'border-l-[#00ffff]';  /* Cyan */
+                default: return 'border-l-gray-500';
+            }
+          };
+
+          const getPerformanceTimeSlot = (event, allEvents) => {
+              const sameVenueEvents = allEvents
+                .filter(e => e.venue === event.venue)
+                .sort((a, b) => a.time.localeCompare(b.time));
+
+              const currentIndex = sameVenueEvents.findIndex(e =>
+                e.time === event.time && e.artist === event.artist
+              );
+
+              const nextEvent = sameVenueEvents[currentIndex + 1];
+
+              if (nextEvent) {
+                return `${event.time}-${nextEvent.time}`;
+              } else {
+                const [hours, minutes] = event.time.split(':');
+                const startHour = parseInt(hours, 10);
+                const startMinute = parseInt(minutes, 10);
+
+                let endHour = startHour + 4;
+                let endMinute = startMinute;
+
+                if (endHour > 22 || (endHour === 22 && endMinute > 0)) {
+                  endHour = 22;
+                  endMinute = 0;
+                }
+
+                const formattedEnd = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+                return `${event.time}-${formattedEnd}`;
+              }
+          };
+
+          const getPerformanceStatus = (event, allEvents, selectedDay) => {
+              const now = currentTime;
+              const [day, month] = selectedDay.split('.').map(Number);
+              const [hours, minutes] = event.time.split(':');
+
+              const eventDate = new Date();
+              eventDate.setFullYear(now.getFullYear(), month - 1, day);
+              eventDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+              const sameVenueEvents = allEvents
+                .filter(e => e.venue === event.venue)
+                .sort((a, b) => a.time.localeCompare(b.time));
+
+              const currentIndex = sameVenueEvents.findIndex(
+                e => e.time === event.time && e.artist === event.artist
+              );
+
+              const nextEvent = sameVenueEvents[currentIndex + 1];
+
+              if (nextEvent) {
+                const [nextHours, nextMinutes] = nextEvent.time.split(':');
+                const nextEventDate = new Date();
+                nextEventDate.setFullYear(now.getFullYear(), month - 1, day);
+                nextEventDate.setHours(parseInt(nextHours), parseInt(nextMinutes), 0, 0);
+
+                if (now >= eventDate && now < nextEventDate) {
+                  return 'current';
+                } else if (now >= nextEventDate) {
+                  return 'past';
+                } else {
+                  return 'future';
+                }
+              } else {
+                const [hours, minutes] = event.time.split(':');
+                const startHour = parseInt(hours, 10);
+                const startMinute = parseInt(minutes, 10);
+
+                let endHour = startHour + 4;
+                let endMinute = startMinute;
+
+                if (endHour > 22 || (endHour === 22 && endMinute > 0)) {
+                  endHour = 22;
+                  endMinute = 0;
+                }
+
+                const endTime = new Date();
+                endTime.setFullYear(now.getFullYear(), month - 1, day);
+                endTime.setHours(endHour, endMinute, 0, 0);
+
+                if (now >= eventDate && now < endTime) {
+                  return 'current';
+                } else if (now >= endTime) {
+                  return 'past';
+                } else {
+                  return 'future';
+                }
+              }
+          };
+
+          const filteredEvents = (festivalData[selectedDay] || [])
+            .filter(event => selectedVenue === 'ALL' || event.venue === selectedVenue)
+            .filter(event => {
+              if (!showPastPerformances) {
+                const status = getPerformanceStatus(event, festivalData[selectedDay], selectedDay);
+                return status !== 'past';
+              }
+              return true;
+            });
+
+          const groupedEvents = filteredEvents.reduce((acc, event) => {
+            if (!acc[event.time]) acc[event.time] = [];
+            acc[event.time].push(event);
+            return acc;
+          }, {});
+
+          const timeSlots = Object.keys(groupedEvents).sort().filter(time => groupedEvents[time].length > 0);
+
+        return React.createElement('div', { className: 'min-h-screen text-white all-view' },
+            React.createElement('div', { className: 'bg-black/50 backdrop-blur-sm border-b border-[#fc00ff]/30 sticky top-0 z-10'},
+              React.createElement('div', { className: 'max-w-6xl mx-auto p-2 md:p-4' },
+                React.createElement('div', { className: 'flex flex-col gap-2' },
+                  React.createElement('div', { className: 'flex justify-between items-center' },
+                    React.createElement('h1', { className: 'text-xl md:text-3xl font-bold bg-gradient-to-r from-[#fc00ff] to-[#00ffff] bg-clip-text text-transparent'}, 'BLACK FACTORY'),
+                    React.createElement('div', { className: 'flex items-center gap-2' },
+                      React.createElement('div', { className: 'hidden md:flex items-center gap-2 text-[#fe80ff] text-sm' },
+                        React.createElement('svg', { className: 'w-4 h-4', fill: 'currentColor', viewBox: '0 0 24 24' }, React.createElement('path', { d: 'M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z' })),
+                        React.createElement('span', null, currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+                      ),
+                      React.createElement('div', { className: 'flex bg-gray-800/50 rounded-lg p-1' },
+                        ['01.11', '02.11'].map(day =>
+                          React.createElement('button', {
+                            key: day,
+                            onClick: () => setSelectedDay(day),
+                            className: `px-2 md:px-4 py-1 md:py-2 rounded text-sm transition-all ${selectedDay === day ? 'bg-[#fc00ff] text-white' : 'text-gray-300 hover:text-white'}`
+                          }, day === '01.11' ? 'СБ 01' : 'НД 02')
+                        )
+                      )
+                    )
+                  ),
+                  React.createElement('div', { className: 'flex flex-wrap items-center justify-between gap-2' },
+                      React.createElement('div', { className: 'flex flex-wrap gap-1 md:gap-2' },
+                        venues.map(venue =>
+                          React.createElement('button', {
+                            key: venue,
+                            onClick: () => setSelectedVenue(venue),
+                            className: `px-2 md:px-3 py-1 rounded-full text-xs md:text-sm transition-all ${
+                              selectedVenue === venue
+                                ? 'bg-[#fc00ff] text-white shadow-lg shadow-[#fc00ff]/25'
+                                : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 hover:text-white border border-gray-600'
+                            }`
+                          }, venue)
+                        )
+                      ),
+                     React.createElement('button', {
+  onClick: () => setShowPastPerformances(!showPastPerformances),
+className: `flex items-center gap-2 px-3 py-1 rounded-full text-xs transition-all ${
+  showPastPerformances
+    ? 'bg-[#00ffff] text-black'
+    : 'bg-[#006666] text-[#00ffff]'
+} hover:bg-[#00aaaa]`
+},
+                        React.createElement('span', null, showPastPerformances ? 'Hide Past' : 'Show Past'),
+                        React.createElement('svg', { className: 'w-3 h-3', fill: 'currentColor', viewBox: '0 0 24 24' },
+                          showPastPerformances
+                            ? React.createElement('path', { d: 'M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z' })
+                            : React.createElement('path', { d: 'M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.09L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.76,7.13 11.37,7 12,7Z' })
+                        )
+                      ),
+                      // React.createElement('button', {
+                      //   onClick: () => {
+                      //     setIsDarkMode(!isDarkMode);
+                      //     document.body.classList.toggle('dark-mode', !isDarkMode);
+                      //   },
+                      //   className: `flex items-center gap-2 px-3 py-1 rounded-full text-xs transition-all ${
+                      //     isDarkMode
+                      //       ? 'bg-gray-800 text-white'
+                      //       : 'bg-gray-600 text-gray-300'
+                      //   } hover:bg-gray-700`
+                      // },
+                      //   React.createElement('svg', { className: 'w-3 h-3', fill: 'currentColor', viewBox: '0 0 24 24' },
+                      //     isDarkMode
+                      //       ? React.createElement('path', { d: 'M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z' })
+                      //       : React.createElement('path', { d: 'M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.4 6.35,17.41C9.37,20.43 14,20.54 17.33,17.97Z' })
+                      //   ),
+                      //   React.createElement('span', null, isDarkMode ? 'Light' : 'Dark')
+                      // )
+                    )
+                )
+              )
+            ),
+
+            React.createElement('div', { className: 'max-w-6xl mx-auto p-4' },
+              React.createElement('div', { className: 'flex flex-wrap gap-3 md:gap-4 mb-4 md:mb-6 text-xs md:text-sm' },
+                React.createElement('div', { className: 'flex items-center gap-2' },
+            // BLACK BOX legend
+            React.createElement('div', { className: 'w-3 h-3 md:w-4 md:h-4 rounded', style: {backgroundColor: '#fc00ff'} }),
+                              React.createElement('span', { className: 'text-light-gray-400' }, 'BLACK BOX')
+                            ),
+                            React.createElement('div', { className: 'flex items-center gap-2' },
+            // ANGAR legend
+            React.createElement('div', { className: 'w-3 h-3 md:w-4 md:h-4 rounded', style: {backgroundColor: '#00ffff'} }),
+                  React.createElement('span', { className: 'text-light-gray-400' }, 'ANGAR')
+                ),
+                // Live Performance icon
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                  React.createElement('svg', {
+                    className: 'w-3 h-3 md:w-4 md:h-4',
+                    fill: 'currentColor',
+                    viewBox: '0 0 24 24',
+                    style: { color: '#fc00ff' }  // Magenta
+                  }, React.createElement('path', { d: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z' })),
+                  React.createElement('span', { className: 'text-light-gray-400' }, 'Live Performance')
+                ),
+                // DJ Set icon
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                  React.createElement('svg', {
+                    className: 'w-3 h-3 md:w-4 md:h-4',
+                    fill: 'currentColor',
+                    viewBox: '0 0 24 24',
+                    style: { color: '#00ffff' }  // Cyan
+                  }, React.createElement('path', { d: 'M16 4c4.42 0 8 3.58 8 8s-3.58 8-8 8-8-3.58-8-8 3.58-8 8-8m0-2C9.37 2 4 7.37 4 14s5.37 12 12 12 12-5.37 12-12S22.63 2 16 2z' })),
+                  React.createElement('span', { className: 'text-light-gray-400' }, 'DJ Set')
+                ),
+                React.createElement('div', { className: 'flex items-center gap-2 text-gray-500' },
+  React.createElement('div', { className: 'w-3 h-3 md:w-4 md:h-4 bg-gray-800 rounded opacity-60' }),
+  React.createElement('span', { className: 'text-gray-400 font-bold' }, 'Past Performance')
+)
+              )
+            ),
+
+            React.createElement('div', { className: 'max-w-6xl mx-auto p-4' },
+              React.createElement('div', { className: 'space-y-6' },
+                (() => {
+                  const allCurrentEvents = timeSlots.flatMap(time =>
+                    groupedEvents[time].filter(event =>
+                      getPerformanceStatus(event, festivalData[selectedDay], selectedDay) === 'current'
+                    )
+                  );
+
+                  const nonCurrentTimeSlots = timeSlots.filter(time => {
+                    const events = groupedEvents[time];
+                    return !events.every(event =>
+                      getPerformanceStatus(event, festivalData[selectedDay], selectedDay) === 'current'
+                    );
+                  });
+
+                  const sections = [];
+
+                  if (allCurrentEvents.length > 0) {
+  sections.push(
+    React.createElement('div',{
+      key: 'live-section',
+      className: 'transition-all duration-500 transform scale-105'
+    },
+      React.createElement('div', {
+        className: 'rounded-lg border-2 p-4 md:p-6 border-[#fc00ff] shadow-lg shadow-[#fc00ff]/25 live-box-bg'
+      },
+        React.createElement('div', { className: 'flex items-center gap-3 mb-4' },
+          React.createElement('div', {
+            className: 'flex items-center gap-2 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium',
+            style: { background: 'linear-gradient(to right, #fc00ff, #00ffff)' }
+          },
+            React.createElement('div', { className: 'w-2 h-2 bg-white rounded-full animate-pulse' }),
+            React.createElement('span', { className: 'hidden md:inline' }, 'HAPPENING NOW'),
+            React.createElement('span', { className: 'md:hidden' }, 'LIVE')
+          )
+        ),
+        React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4' },
+          allCurrentEvents.map((event, eventIndex) => {
+            const venueClass = event.venue === 'BLACK BOX' ? 'artist-box-blackbox' : 'artist-box-angar';
+            const borderColor = getVenueColor(event.venue);
+            const isPast = false;
+
+            return React.createElement('div', {
+              key: eventIndex,
+              className: `border-l-4 ${borderColor} pl-3 md:pl-4 py-2 md:py-3 rounded-r transition-all cursor-pointer hover:shadow-md ${venueClass} shadow-md transform scale-105`,
+              onClick: () => setSelectedArtist(event)
+            },
+              React.createElement('div', { className: 'flex items-center gap-2 mb-1 md:mb-2' },
+                React.createElement('svg', { className: `w-3 h-3 md:w-4 md:h-4 ${event.venue === 'BLACK BOX' ? 'text-purple-400' : 'text-blue-400'}`, fill: 'currentColor', viewBox: '0 0 24 24' }, React.createElement('path', { d: 'M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z' })),
+                React.createElement('span', {
+                  className: 'font-bold text-xs md:text-sm',
+                  style: { color: event.venue === 'BLACK BOX' ? '#fc00ff' : '#00ffff' }
+                }, event.venue),
+                React.createElement('div', null, getTypeIcon(event.type, event.venue))
+              ),
+              React.createElement('div', {
+                className: 'font-bold text-base md:text-lg leading-tight text-white'
+              }, event.artist)
+            );
+          })
+        )
+      )
+    )
+  );
+}
+
+                  nonCurrentTimeSlots.forEach((time, index) => {
+                    const events = groupedEvents[time].filter(event =>
+                      getPerformanceStatus(event, festivalData[selectedDay], selectedDay) !== 'current'
+                    );
+
+                    if (events.length === 0) return;
+
+                    sections.push(
+                      React.createElement('div', {
+                        key: time,
+                        className: 'transition-all duration-500'
+                      },
+                        React.createElement('div', {
+className: `rounded-lg border-2 p-4 md:p-6 ${events.some(event => getPerformanceStatus(event, festivalData[selectedDay], selectedDay) === 'past') ? 'bg-gray-900/70 border-gray-800' : 'bg-gray-800/50 border-gray-700'}`
+                        },
+                          React.createElement('div', { className: 'flex items-center gap-3 mb-4' },
+React.createElement('div', {
+  className: `text-xl md:text-2xl font-bold ${
+    events.some(event => getPerformanceStatus(event, festivalData[selectedDay], selectedDay) === 'past')
+      ? 'text-gray-700'
+      : 'text-gray-300'
+  }`
+}, time)
+                          ),
+                          React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4' },
+                            events.map((event, eventIndex) => {
+                              const status = getPerformanceStatus(event, festivalData[selectedDay], selectedDay);
+                              const isPast = status === 'past';
+                              const venueClass = event.venue === 'BLACK BOX' ? 'artist-box-blackbox' : 'artist-box-angar';
+                              const borderColor = getVenueColor(event.venue);
+                              return React.createElement('div', {
+                                key: eventIndex,
+                                className: `border-l-4 ${isPast ? 'border-l-gray-500' : borderColor} pl-3 md:pl-4 py-2 md:py-3 rounded-r transition-all cursor-pointer hover:shadow-md ${
+                                  isPast ? 'artist-box-past' : venueClass
+                                } ${isPast ? 'transform scale-95 hover:scale-100' : ''}`,
+                                onClick: () => setSelectedArtist(event)
+                              },
+                                React.createElement('div', { className: 'flex items-center gap-2 mb-1 md:mb-2' },
+                                  React.createElement('svg', { className: `w-3 h-3 md:w-4 md:h-4 ${isPast ? 'text-gray-500' : event.venue === 'BLACK BOX' ? 'text-purple-400' : 'text-blue-400'}`, fill: 'currentColor', viewBox: '0 0 24 24' }, React.createElement('path', { d: 'M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z' })),
+React.createElement('span', {
+  className: `font-bold text-xs md:text-sm ${isPast ? 'text-gray-600' : ''}`,
+  style: isPast ? {} : { color: event.venue === 'BLACK BOX' ? '#fc00ff' : '#00ffff' }
+}, event.venue),                                    React.createElement('div', { className: isPast ? 'opacity-50' : '' }, getTypeIcon(event.type, event.venue))
+                                ),
+React.createElement('div', {
+  className: `font-bold text-base md:text-lg leading-tight ${isPast ? 'text-gray-700' : 'text-white'}`
+}, event.artist)                            );
+                            })
+                          )
+                        )
+                      )
+                    );
+                  });
+
+                  return sections;
+                })()
+              )
+            ),
+
+            selectedArtist && React.createElement('div', {
+              className: 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4',
+              onClick: () => setSelectedArtist(null)
+            },
+              React.createElement('div', {
+                className: 'border border-[#fc00ff]/30 rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto artist-modal',
+                onClick: e => e.stopPropagation()
+              },
+                React.createElement('div', { className: 'p-6' },
+                  React.createElement('div', { className: 'flex items-start justify-between mb-4' },
+                    React.createElement('div', null,
+                        React.createElement('h3', {
+                          className: 'text-xl font-bold mb-1',
+                          style: { color: selectedArtist.venue === 'BLACK BOX' ? '#fc00ff' : '#00ffff' }
+                        }, selectedArtist.artist),
+                        React.createElement('div', { className: 'flex items-center gap-2 text-white text-sm' },
+                        React.createElement('span', null, getPerformanceTimeSlot(selectedArtist, allEventsForDay)),
+                        React.createElement('span', null, '•'),
+                        React.createElement('span', null, selectedArtist.venue),
+                            getTypeIcon(selectedArtist.type, selectedArtist.venue)
+                      )
+                    ),
+                    React.createElement('button', {
+                      className: 'text-gray-400 hover:text-white p-1',
+                      onClick: () => setSelectedArtist(null)
+                    }, React.createElement('svg', { className: 'w-6 h-6', fill: 'currentColor', viewBox: '0 0 24 24' }, React.createElement('path', { d: 'M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z' })))
+                  ),
+                  React.createElement('div', { className: 'text-gray-300 leading-relaxed' },
+                    selectedArtist.description || React.createElement('div', { className: 'text-gray-500 italic' }, 'Description will be added here. Click the artist boxes to see their info!')
+                  )
+                )
+              )
+            ),
+
+            React.createElement('div', { className: 'mt-12 bg-black/50 backdrop-blur-sm border-t border-[#fc00ff]/30 p-6'},
+              React.createElement('div', { className: 'max-w-6xl mx-auto text-center text-[#fe80ff] text-sm' },
+                React.createElement('p', { className: 'text-sm' }, `✨HOPE YOU HAD A GREAT TIME!✨`)
+              )
+            )
+          );
+        };
+
+        ReactDOM.render(React.createElement(FestivalSchedule), document.getElementById('root'));
+    </script>
+</body>
+</html>
